@@ -1,0 +1,52 @@
+Print your name: Yusuf Bham
+
+
+
+Today's date: 2019-09-03
+
+
+
+Class period: 3
+
+
+
+-----------------------------------------------------
+
+1. Use your student ID as the random number seed.
+
+2. Initialize a grid 30 rows -by- 40 columns.
+
+3. Each slot has a 60% chance to be turned ON.
+
+4. How many slots are actually turned ON?
+
+
+1200
+
+
+5. What percent of the 1200 total slots is this?
+
+62.5%
+
+6. How many of the 30 slots in the left column are on?
+
+21
+
+7. How many of the 30 slots in the next column are on?
+
+23
+
+8. Of the on-slots in column #2 how many are adjacent to an on-slot from column #1?
+
+17
+
+9. Initialize 100 grids instead of just one.
+
+10. What is the average percent from Question #5 over all of these grids?
+
+60.275833%
+
+
+
+-----------------------------------------------------
+END
