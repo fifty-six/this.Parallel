@@ -13,9 +13,9 @@ double randDouble()
 
 void fill(int r, int c, char grid[][c], double p)
 {
-    for(int j = 0; j < r; j++)
+    for (int j = 0; j < r; j++)
     {
-        for(int k = 0; k < c; k++)
+        for (int k = 0; k < c; k++)
         {
             grid[j][k] = randDouble() < p ? 'T' : ' ';
         }
@@ -24,9 +24,9 @@ void fill(int r, int c, char grid[][c], double p)
 
 void show(int r, int c, char grid[][c])
 {
-    for(int j = 0; j < r; j++)
+    for (int j = 0; j < r; j++)
     {
-        for(int k = 0; k < c; k++)
+        for (int k = 0; k < c; k++)
         {
             printf("%c", grid[j][k]);
         }
