@@ -12,6 +12,7 @@
 #define OFF ' '
 #define FIRE '*'
 #define PREFIRE '^'
+// #define SHOW
 
 double randDouble()
 {
@@ -29,8 +30,20 @@ void fill(size_t r, size_t c, char grid[][c], double p)
     }
 }
 
+void msleep(int ms)  
+{
+    struct timespec ts = 
+    {
+        ms / 1000,
+        (ms % 1000) * 1000000L
+    };
+
+    nanosleep(&ts, NULL);
+}
+
 void show(size_t r, size_t c, char grid[][c], int step)
 {
+#ifdef SHOW
     printf("\e[1;1H\e[2J");
 
     for (size_t j = 0; j < r; j++)
@@ -44,7 +57,8 @@ void show(size_t r, size_t c, char grid[][c], int step)
 
     printf("%i\n", step);
 
-    // sleep(1);
+    msleep(150);
+#endif
 }
 
 
@@ -98,18 +112,14 @@ bool doneSpread(size_t r, size_t c, char grid[][c])
     return true;
 }
 
-int main()
+const size_t r = 30;
+const size_t c = 40;
+
+double avg(double p)
 {
-    long long rseed = 1454734;
-
-    const size_t r = 30;
-    const size_t c = 40;
-
-    srand(rseed);
-
     char grid[r][c];
 
-    fill(r, c, grid, 0.60);
+    fill(r, c, grid, p);
 
     int step = -1;
 
@@ -127,7 +137,21 @@ int main()
 
     show(r, c, grid, step);
 
-    printf("Steps: %i/%lu, %f\n", step, c, (step * 1.0/c));
+    // printf("Steps: %i/%lu, %f\n", step, c, (step * 1.0/c));
 
+    return (step * 1.0/c);
+}
+
+int main()
+{
+    long long rseed = 1454734;
+
+    srand(rseed);
+
+    for (double p = 0.01; p <= 1; p += 0.01)
+    {
+        printf("%f, %f\n", p, avg(p));
+    }
+    
     return 0;
 }
