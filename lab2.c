@@ -115,7 +115,7 @@ bool doneSpread(size_t r, size_t c, char grid[][c])
 const size_t r = 30;
 const size_t c = 40;
 
-double avg(double p)
+double sim(double p)
 {
     char grid[r][c];
 
@@ -126,7 +126,7 @@ double avg(double p)
     show(r, c, grid, step);
 
     step = 0;
-    
+
     ignite(r, c, grid);
 
     while(!doneSpread(r, c, grid))
@@ -137,9 +137,20 @@ double avg(double p)
 
     show(r, c, grid, step);
 
-    // printf("Steps: %i/%lu, %f\n", step, c, (step * 1.0/c));
+    return (step * 1.0)/c;
+}
 
-    return (step * 1.0/c);
+double avg(double p)
+{
+    const double count = 10000;
+
+    double total = 0;
+
+    for (int i = 0; i < count; i++)
+        total += sim(p);
+
+    return total / count;
+
 }
 
 int main()
@@ -148,10 +159,10 @@ int main()
 
     srand(rseed);
 
-    for (double p = 0.01; p <= 1; p += 0.01)
+    for (double p = 0.01; p <= 1; p += 0.005)
     {
         printf("%f, %f\n", p, avg(p));
     }
-    
+
     return 0;
 }

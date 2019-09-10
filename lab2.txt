@@ -52,7 +52,7 @@ Class period:
 
 10. Report the random number seed, M, N, T, and delta P.
 
-1454734, 30, 40, 66, 60%
+1454734, 30, 40, 10000, .5%
 
 
 
