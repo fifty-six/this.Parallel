@@ -3,16 +3,13 @@
 //
 
 #include <stdio.h>
-#include <unistd.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
 
 #define ON 'T'
 #define OFF ' '
 #define FIRE '*'
-#define PREFIRE '^'
-#define SHOW
+// #define SHOW
 
 struct Point
 {
@@ -36,7 +33,7 @@ struct Point rem(struct Queue* q)
 {
     if (q -> first == NULL)
     {
-        fprintf(stderr, "Tried to pop from an empty queue!");
+        fprintf(stderr, "Tried to pop from an empty queue!\n");
 
         __builtin_trap();
     }
@@ -44,6 +41,10 @@ struct Point rem(struct Queue* q)
     struct Node* first = q -> first;
 
     q -> first = first -> next;
+
+    // Removing the only node in the Queue.
+    if (q -> first == NULL)
+        q -> last = NULL;
 
     struct Point p = first -> pos;
 
@@ -54,8 +55,10 @@ struct Point rem(struct Queue* q)
 
 void add(struct Queue* q, size_t x, size_t y)
 {
-    struct Point p = { .x = x, .y = y };
+    struct Point p = {.x = x, .y = y};
+
     struct Node* node = (struct Node*) malloc(sizeof(struct Node));
+    node -> next = NULL;
     node -> pos = p;
 
     if (q -> first == NULL)
@@ -65,6 +68,7 @@ void add(struct Queue* q, size_t x, size_t y)
         return;
     }
 
+    q -> last -> next = node;
     q -> last = node;
 }
 
@@ -129,7 +133,7 @@ void ignite(size_t r, size_t c, char grid[][c], struct Queue* q)
 
 void spread(int* step, size_t r, size_t c, char grid[][c], struct Queue* fire)
 {
-    struct Queue newFire;
+    struct Queue newFire = {.first = NULL, .last = NULL};
 
     while (fire -> first != NULL)
     {
@@ -153,7 +157,7 @@ void spread(int* step, size_t r, size_t c, char grid[][c], struct Queue* fire)
             grid[x+1][y] = FIRE;
             add(&newFire, x + 1, y);
         }
-        if (x  - 1 >= 0 && grid[x-1][y] == ON)
+        if (x - 1 >= 0 && grid[x-1][y] == ON)
         {
             grid[x-1][y] = FIRE;
             add(&newFire, x - 1, y);
@@ -217,11 +221,10 @@ int main()
 
     srand(rseed);
 
-    // for (double p = 0.01; p <= 1; p += 0.005)
-    // {
-    //     printf("%f, %f\n", p, avg(p));
-    // }
-    sim(0.6);
+    for (double p = 0.01; p <= 1; p += 0.005)
+    {
+        printf("%f, %f\n", p, avg(p));
+    }
 
     return 0;
 }
