@@ -172,10 +172,7 @@ void spread(int* step, size_t r, size_t c, char grid[][c], struct Queue* fire)
     (*step)++;
 }
 
-const size_t r = 30;
-const size_t c = 40;
-
-double sim(double p)
+double sim(double p, int r, int c)
 {
     char grid[r][c];
 
@@ -202,14 +199,14 @@ double sim(double p)
     return (step * 1.0)/c;
 }
 
-double avg(double p)
+double avg(double p, int r, int c)
 {
     const double count = 10000;
 
     double total = 0;
 
     for (int i = 0; i < count; i++)
-        total += sim(p);
+        total += sim(p, r, c);
 
     return total / count;
 
@@ -221,10 +218,16 @@ int main()
 
     srand(rseed);
 
+    const int r = 30;
+    const int c = 40;
+
+    printf("P, 30x40, 60x80, 120x160\n");
     for (double p = 0.01; p <= 1; p += 0.005)
     {
-        printf("%f, %f\n", p, avg(p));
+        printf("%f, %f, %f, %f\n", p, avg(p, r, c), avg(p, r*2, c*2), avg(p, r*4, c*4));
+        fprintf(stderr, "%f\n", p);
     }
+    fflush(stdout);
 
     return 0;
 }
