@@ -221,11 +221,12 @@ int main()
     const int r = 30;
     const int c = 40;
 
-    printf("P, 30x40, 60x80, 120x160\n");
+    FILE *f = fopen("out.csv", "w");
+
+    printf("P, 30x40\n");
     for (double p = 0.01; p <= 1; p += 0.005)
     {
-        printf("%f, %f, %f, %f\n", p, avg(p, r, c), avg(p, r*2, c*2), avg(p, r*4, c*4));
-        fprintf(stderr, "%f\n", p);
+        fprintf(f, "%f, %f\n", p, avg(p, r, c));
     }
     fflush(stdout);
 

@@ -1,0 +1,60 @@
+Print your name: Yusuf Bham
+
+
+
+Today's date: 2019-09-24
+
+
+
+Class period: 3
+
+
+
+-----------------------------------------------------
+
+1. Initialize a grid M rows -by- N columns.
+
+2. Each slot has a P% chance to be turned ON.
+
+3. At time zero IGNITE the on-slots in the left column.
+
+4. Then count the number of steps it takes to BURNOUT.
+
+5. At each timestep spread to the four nearest neighbors.
+
+6. Do not include diagonal neighbors.
+
+7. Normalize the final count by dividing by the width.
+
+8. Average the normalized burnout time over T trials.
+
+9. Report M, N, T, and delta P that runs for 30+ seconds.
+
+30x40, 10000, .5
+
+
+
+10. Plot the runtime for np = 1 (serial), 2, 4, 8, 16, 32.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-----------------------------------------------------
+END

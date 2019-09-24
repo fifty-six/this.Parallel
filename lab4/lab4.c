@@ -3,6 +3,8 @@
 //
 
 #include <stdio.h>
+#include <signal.h>
+#include <string.h>
 #include <stdlib.h>
 #include <time.h>
 #include <mpi.h>
@@ -10,7 +12,8 @@
 #define ON 'T'
 #define OFF ' '
 #define FIRE '*'
-// #define SHOW
+// Equivalent to (1/STEPS) probability = .005 = .5%
+#define STEPS 201 
 
 struct Point
 {
@@ -163,58 +166,101 @@ double sim(double p, int r, int c)
     return (step * 1.0)/c;
 }
 
-double avg(double p, int r, int c)
+int sum(double p, int r, int c, int count)
 {
-    const double count = 10000;
-
     double total = 0;
 
     for (int i = 0; i < count; i++)
         total += sim(p, r, c);
 
-    return total / count;
-
+    return total;
 }
 
-void master()
+const int totalTrials = 10000;
+
+void master(int size)
 {
-    const int r = 30;
-    const int c = 40;
+    MPI_Status status;
 
     FILE *f = fopen("out.csv", "w");
-    fprintf(f, "P, 30x40, 60x80, 120x160\n");
 
-    for (double p = 0.01; p <= 1; p += 0.005)
+    fprintf(f, "P, 30x40");
+
+    int sums[STEPS];
+
+    memset(&sums, 0, sizeof(int) * STEPS);
+
+    int res[STEPS];
+
+    for (int i = 0; i < (size - 1); i++)
     {
-        fprintf(f, "%f, %f, %f, %f\n", p, avg(p, r, c), avg(p, r*2, c*2), avg(p, r*4, c*4));
+        MPI_Recv(&res, STEPS, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
+
+        printf("Recieved value from %i\n", status.MPI_SOURCE);
+
+        for (int j = 0; j < STEPS; j++)
+        {
+            sums[j] += res[j];
+        }
+    }
+
+    double dP = 1.0 / (STEPS - 1);
+    for (int i = 0; i < STEPS; i++)
+    {
+        fprintf(f, "%f, %f\n", (dP * i), sums[i]*1.0 / totalTrials);
     }
 
     fclose(f);
 }
 
-void slave()
+void slave(int size)
 {
-    
+    const int r = 30;
+    const int c = 40;
+
+    const int trials = (int) (totalTrials / (size - 1));
+
+    printf("Size is %i so %i trials\n", size, trials);
+
+    int res[STEPS];
+
+    memset(&res, 0, sizeof(int) * STEPS);
+
+    for (int p = 0; p < STEPS; p++)
+    {
+        res[p] = sum(p*1.0 / STEPS, r, c, trials);
+    }
+
+    MPI_Send(&res, STEPS, MPI_INT, 0, 0, MPI_COMM_WORLD);
+}
+
+void sigInt(int sig) 
+{
+    printf("Caught Ctrl-C. Aborting.\n");
+    MPI_Finalize();
 }
 
 int main(int argc, char* argv[])
 {
     long long rseed = 1454734;
 
-    srand(rseed);
-
     int size;
     int rank;
 
-    MPI_init(&argc, &argv);
-    MP_Comm_size(MPI_COMM_WORLD, &size);
-    MP_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    srand(rseed + rank);
+
+    signal(SIGINT, sigInt);
 
     if (rank == 0)
-        master();
+        master(size);
     else
-        slave();
+        slave(size);
 
+    MPI_Finalize();
 
     return 0;
 }

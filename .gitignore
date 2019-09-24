@@ -12,6 +12,7 @@
 # Session
 Session.vim
 Sessionx.vim
+out.csv
 
 # Temporary
 .netrwhist
