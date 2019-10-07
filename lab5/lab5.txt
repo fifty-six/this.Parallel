@@ -1,0 +1,61 @@
+Print your name: Yusuf Bham
+
+
+
+Today's date: 2019-10-3
+
+
+
+Class period: 3
+
+
+
+-----------------------------------------------------
+
+1. Initialize a grid M rows -by- N columns.
+
+2. Each slot has a P% chance to be turned ON.
+
+3. At time zero IGNITE the on-slots in the left column.
+
+4. Then count the number of steps it takes to BURNOUT.
+
+5. At each timestep spread to the four nearest neighbors.
+
+6. Do not include diagonal neighbors.
+
+7. Normalize the final count by dividing by the width.
+
+8. Average the normalized burnout time over T trials.
+
+9. Report M, N, T, delta P, np, and runtime.
+
+1000x1000, 10k trials, .001%, 150, 4m44.970s
+
+10. What is the peak value?
+
+Peak value is 2.7633 at 0.5965 (59.65%)
+
+11. Confirm AVG increases to peak then decreases.
+
+12. Confirmation can be done on output data only.
+
+13. Confirmation can be done with any language.
+
+14. Find the peak value for all your other plots.
+500x500 - 0.598900, 2.535600
+250x250 - 0.598700, 2.505600
+100x100 - 0.615700, 2.027900
+
+15. How does the peak change as resolution increases?
+
+Y value goes higher as resolution increases.
+X value goes farther left as resolution increases.
+
+
+
+
+
+
+-----------------------------------------------------
+END
