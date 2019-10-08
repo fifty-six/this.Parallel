@@ -1,0 +1,60 @@
+Print your name: Yusuf Bham
+
+
+
+Today's date: 2019-10-07
+
+
+
+Class period: 3
+
+
+
+-----------------------------------------------------
+
+1. Initialize a grid M rows -by- N columns.
+
+2. Each slot has a P% chance to be turned ON.
+
+3. At time zero IGNITE the on-slots in the left column.
+
+4. Then count the number of steps it takes to BURNOUT.
+
+5. At each timestep spread to the four nearest neighbors.
+
+6. Normalize the final count by dividing by the width.
+
+7. Average the normalized burnout time over T trials.
+
+8. Connect to infosphere and run on the cluster.
+
+9. Report M, N, T that runs for 30+ seconds for np = 8.
+
+M = 60, N = 60, T = 10k, dP = .05%
+
+
+
+10. Plot the runtime for np = 8, 16, 32, 64, 128.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-----------------------------------------------------
+END
