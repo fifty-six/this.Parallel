@@ -59,8 +59,8 @@ plt.title("Speed")
 # plt.axis('off')
 plt.tight_layout()
 
-plt.savefig("graph.png")
-#plt.show()
+#plt.savefig("graph.png")
+plt.show()
 
 """
 start = 120000

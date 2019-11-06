@@ -109,6 +109,12 @@ int main(int argc, char** argv)
 
             double r_moon = sqrt(distSq_moon);
 
+            if (r_moon < 1.7374e+6)
+            {
+                fprintf(stderr, "Crashed into moon at t = %f!\n", t[j]);
+                return -1;
+            }
+
             double a_moon = -(G*M_MOON)/distSq_moon;
 
             vx[j] = vx[j-1] + (a * DT * x[j] / r) + (a_moon * DT * (x[j] - x_moon[j]) / r_moon);

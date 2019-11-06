@@ -46,7 +46,7 @@ Plot the speed of Apollo over time.  Indicate when the
 interaction with the moon takes place, by hand is fine.
 
 
-THETA = 25.7
+THETA = 25.9
 
 
 
