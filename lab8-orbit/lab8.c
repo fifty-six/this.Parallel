@@ -5,12 +5,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdbool.h>
 
 #define G 6.674e-11 // (m^3)(kg^-1)(s^-2)
 #define M 5.972e+24 // kg
 #define R 6.371e+6  // m
 
-#define DT 0.25     // s
+#define DT .5     // s
 
 #define M_MOON 7.349e+22 // kg
 #define R_MOON 1.7374e+6 // m
@@ -32,7 +33,7 @@ int main(int argc, char** argv)
     //
     // time intervals - duration is 90 minutes
     //
-    int n = (int)( 0.5 + ( 80 * 60 * 60 ) / DT );
+    int n = (int)( 0.5 + ( 300 * 60 * 60 ) / DT );
 
     double*  t = create_double_array(n);
 
@@ -58,9 +59,11 @@ int main(int argc, char** argv)
 
     t[0]  =         96302.0;
 
-    double theta = atof(argv[1]) * (M_PI / 180);
+    double theta = 25.9 * (M_PI / 180);
     double dist_mag = R + 202751774.4;
     double v_mag = 1527.048;
+
+    double scalar = atof(argv[1]);
 
     x[0]  =  dist_mag * cos(theta);
     y[0]  =  dist_mag * sin(theta);
@@ -72,6 +75,8 @@ int main(int argc, char** argv)
     y_moon[0] =         0.0;
     vx_moon[0] =        0.0;
     vy_moon[0] =     V_MOON;
+
+    bool turned = false;
 
     for(int j = 1; j < n; j++)
     {
@@ -119,6 +124,14 @@ int main(int argc, char** argv)
 
             vx[j] = vx[j-1] + (a * DT * x[j] / r) + (a_moon * DT * (x[j] - x_moon[j]) / r_moon);
             vy[j] = vy[j-1] + (a * DT * y[j] / r) + (a_moon * DT * (y[j] - y_moon[j]) / r_moon);
+
+            if (!turned && di[j] < di[j - 1])
+            {
+                turned = true;
+
+                vx[j] *= scalar;
+                vy[j] *= scalar;
+            }
         }
     }
 

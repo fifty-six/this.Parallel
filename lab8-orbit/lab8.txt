@@ -1,0 +1,60 @@
+Print your name: Yusuf Bham
+
+
+
+Today's date: 2019-10-28
+
+
+
+Class period: 3
+
+
+
+-----------------------------------------------------
+
+1. Earth and Moon in orbit.
+
+2. Moon
+
+    #define M 7.349e+22 // kg
+    #define R 1.7374e+6 // m
+    #define V 1023.157  // m/s
+    
+    double r = 3.844e8 ; // distance from Earth
+
+3. Speed, okay to use uniform circular motion formula.
+
+4. Mass does not matter until including spaceship too.
+
+5. Radius to visualize and later if spaceship crashes.
+
+6. Initialize x = r and vy = V, first quadrant.
+
+7. Check it is correct.
+
+8. Only then, add vehicle, must change loop code now.
+
+9. Apollo
+
+    t[0]  = 96302.0          ; // 26 h, 45 m, 2 s
+    r     = RE + 202751774.4 ;
+    vmag  = 1527.048         ;
+
+10. Find THETA for a free return trajectory.  Plot the
+Earth, the Moon, and the Apollo spacecraft free return.
+Plot the speed of Apollo over time.  Indicate when the
+interaction with the moon takes place, by hand is fine.
+
+
+THETA = 25.9
+
+
+
+
+
+
+
+
+
+-----------------------------------------------------
+END
