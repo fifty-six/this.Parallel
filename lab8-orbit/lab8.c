@@ -24,12 +24,6 @@ double* create_double_array(int n)
 
 int main(int argc, char** argv)
 {
-    if (argc == 1 || argc > 2)
-    {
-        fprintf(stderr, "Argument mismatch! Usage: [%s] THETA\n", argv[0]);
-        return 1;
-    }
-
     //
     // time intervals - duration is 90 minutes
     //
@@ -63,7 +57,7 @@ int main(int argc, char** argv)
     double dist_mag = R + 202751774.4;
     double v_mag = 1527.048;
 
-    double scalar = atof(argv[1]);
+    double scalar = .66;
 
     x[0]  =  dist_mag * cos(theta);
     y[0]  =  dist_mag * sin(theta);
