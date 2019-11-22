@@ -26,6 +26,9 @@ tags
 ##### end #####
 ###############
 
+# Output
+orbit.txt
+
 # Prerequisites
 *.d
 
