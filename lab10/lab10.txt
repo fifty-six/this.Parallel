@@ -56,7 +56,9 @@ not already escaping the Earth.
 10. Describe your runtime and what pair did you find
 that maximizes the exit speed?
 
-Max: [188.450000 deg, 2970.000000 v0, 2402.260044 vmax]
+Total time run for : 160 hours.
+
+Max: [188.450000 deg, 2970.000000 v_initial, 2402.260044 v_final]
 
 Goes very close to the earth, which gives a large bit of speed, then passes very close to the moon 
 which adjusts angle of exit upwards and provides more speed.
