@@ -43,7 +43,7 @@ around its regular orbit.
 
 6. Are there other possible outcomes?
 
-Yes. Some example are going around the earth in a slingshot-esque motion and then going around the moon again
+Yes. One example is going around the earth in a slingshot-esque motion and then going around the moon again
 which can repeat for a while.
 
 7. Use angle = 181 , 182 , ... , 269 degrees
