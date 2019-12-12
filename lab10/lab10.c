@@ -226,6 +226,8 @@ double simulate(
     bool print
 )
 {
+    theta *= M_PI / 180;
+
     double v_mag = (double) speed;
 
     t[0]  = 0;
