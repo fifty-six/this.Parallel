@@ -6,9 +6,10 @@
 #include <stdlib.h>
 #include <time.h>
 #include <mpi.h>
+#include <signal.h>
 
-#define M 9600
-#define N 7200
+#define M 28800
+#define N 21600
 #define ITER 1000
 
 #define R_MAX 2.0
@@ -114,7 +115,7 @@ void master(int size, struct Color* palette)
     // Recieve actual values...
     for (int i = 0; i < (size - 1); i++)
     {
-        MPI_Recv(res, sizeof(struct Color) * amount * M, MPI_CHAR, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
+        MPI_Recv(res, sizeof(struct Color) * amount * M, MPI_CHAR, MPI_ANY_SOURCE, 1, MPI_COMM_WORLD, &status);
 
         fprintf(stderr, "Recieving value...\n");
 
@@ -185,7 +186,7 @@ void slave(int size, int rank, struct Color* palette)
 
     // printf("after loop\n");
 
-    MPI_Send(res, sizeof(struct Color) * amount * M, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+    MPI_Send(res, sizeof(struct Color) * amount * M, MPI_CHAR, 0, 1, MPI_COMM_WORLD);
 
     // printf("after send\n");
 
