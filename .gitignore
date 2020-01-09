@@ -28,6 +28,7 @@ tags
 
 # Output
 orbit.txt
+out.ppm
 
 # Prerequisites
 *.d
