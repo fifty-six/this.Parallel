@@ -123,7 +123,6 @@ void master(int size, struct Color* palette)
 
         for (size_t i = 0; i < amount; i++)
         {
-            // TODO: Offset. amount * (status.MPI_SOURCE)
             for (size_t j = 0; j < M; j++)
             {
                 struct Color c = res[j * amount + i];
@@ -170,11 +169,7 @@ void slave(int size, int rank, struct Color* palette)
 
     size_t amount = N / (size - 1);
 
-    // printf("before malloc\n");
-
     struct Color* res = malloc(sizeof(struct Color) * amount * M);
-
-    // printf("after malloc\n");
 
     for (size_t i = 0; i < amount; i++)
     {
@@ -184,11 +179,7 @@ void slave(int size, int rank, struct Color* palette)
         }
     }
 
-    // printf("after loop\n");
-
     MPI_Send(res, sizeof(struct Color) * amount * M, MPI_CHAR, 0, 1, MPI_COMM_WORLD);
-
-    // printf("after send\n");
 
     free(res);
 }
