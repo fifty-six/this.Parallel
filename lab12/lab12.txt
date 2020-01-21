@@ -1,0 +1,39 @@
+Print your name: Yusuf Bham
+
+
+
+Today's date: 2019-01-21
+
+
+
+Class period: 3
+
+
+
+-----------------------------------------------------
+
+- What bounds did you use? (see example above)
+
+#define R_MAX -0.1055731773376464
+#define R_MIN -0.1055579185485839
+#define I_MAX -0.9258638381958009
+#define I_MIN -0.925852394104004
+
+- What was the max number of iterations?
+
+10,000,000
+
+- How did you split the MPI?
+
+Split the row work by workers, so that each worker did a few rows.
+
+My mandelbrot uses log+lerp smoothing so the workers send a (struct Color) array to the master.
+Rank 0 then stiches up the image after recieving the pieces.
+
+- Describe the impact on runtime.
+
+327.381785 seconds after running it in parallel over 190 cores.
+Serial takes too long to run.
+
+-----------------------------------------------------
+END

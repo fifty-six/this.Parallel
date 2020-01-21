@@ -8,14 +8,14 @@
 #include <mpi.h>
 #include <signal.h>
 
-#define M 28800
-#define N 21600
-#define ITER 1000
-
-#define R_MAX 2.0
-#define R_MIN -R_MAX
-#define I_MAX 1.5
-#define I_MIN -1.5
+#define M 6144
+#define N 4608
+#define ITER 10000000
+ 
+#define R_MAX -0.1055731773376464 
+#define R_MIN -0.1055579185485839
+#define I_MAX -0.9258638381958009 
+#define I_MIN -0.925852394104004
 
 double lerp(double v0, double v1, double t) {
     return (1 - t) * v0 + t * v1;
@@ -192,7 +192,7 @@ void sig_int(int sig)
 
 int main(int argc, char* argv[])
 {
-   struct Color palette[ITER + 1];
+   struct Color *palette = malloc(sizeof(struct Color) * (ITER + 1));
 
    for (size_t i = 0; i < ITER + 1; i++)
    {
@@ -252,6 +252,8 @@ int main(int argc, char* argv[])
         master(size, palette);
     else
         slave(size, rank, palette);
+
+    free(palette);
 
     MPI_Finalize();
 
