@@ -10,6 +10,7 @@
 #define MAX_X 1920
 #define MAX_Y 1080
 #define EPSILON 0.001
+#define SHADOW .5
 
 typedef struct
 {
@@ -240,10 +241,12 @@ int main(void)
 
             Vector3 ray_dir = create_ray(eye, (Vector3) { .x = px_scaled, .y = py_scaled });
 
-            Color c = { .r = 255, .g = 255, .b = 255 };
+            Color c = { .r = 0, .g = 0, .b = 0 };
 
             double min_t = INFINITY;
             double t = 0;
+
+            int sphere = 0;
 
             // foreach (Sphere a[i] in a)
             for (size_t i = 0; i < SPHERE_NUM; i++)
@@ -253,6 +256,8 @@ int main(void)
                    if (t >= min_t) continue;
 
                    min_t = t;
+
+                   sphere = i;
 
                    c = spheres[i].h;
                 }
@@ -269,19 +274,32 @@ int main(void)
             // t is subtracted by a bit so we aren't inside the sphere
             Vector3 intersection = add_vec(eye, mul_vec(ray_dir, min_t - EPSILON));
 
-            ray_dir = create_ray(intersection, light);
+            Vector3 light_dir = create_ray(intersection, light);
 
             // And then check if intersection -> light hits anything
             for (size_t i = 0; i < SPHERE_NUM; i++)
             {
-                if (!cast(intersection, ray_dir, spheres[i], &t)) continue;
+                if (!cast(intersection, light_dir, spheres[i], &t)) continue;
 
-                c.r /= 2;
-                c.g /= 2;
-                c.b /= 2;
+                c.r *= SHADOW;
+                c.g *= SHADOW;
+                c.b *= SHADOW;
 
                 break;
             }
+
+            // Take the intersection dot the surface normal to find the cosine between the two
+            Vector3 gradient = sub_vec(intersection, spheres[sphere].c);
+            normalize(&gradient);
+
+            // |grad| = 1, |ray_dir| = 1, 1 * 1 * cos(\theta) = cos(\theta).
+            double cos_theta = dot_vec(gradient, light_dir);
+
+            cos_theta = cos_theta < 0 ? cos_theta * -1 : cos_theta;
+            
+            c.r *= (1 - SHADOW) + SHADOW * cos_theta;
+            c.g *= (1 - SHADOW) + SHADOW * cos_theta;
+            c.b *= (1 - SHADOW) + SHADOW * cos_theta;
 
             grid[y][x] = c;
         }
