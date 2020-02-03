@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define MAX_X 640
-#define MAX_Y 480
+#define MAX_X 1920
+#define MAX_Y 1080
 #define EPSILON 0.001
 
 typedef struct
@@ -16,14 +16,15 @@ typedef struct
    double x ;
    double y ;
    double z ;
-   //
-} Vector3 ;
+
+} Vector3;
 
 typedef struct
 {
     int r;
     int g;
     int b;
+
 } Color;
 
 typedef struct
@@ -43,10 +44,8 @@ typedef struct
 
 Sphere spheres[SPHERE_NUM];
 
-//
-Vector3 eye = { 0.50 , 0.50 , -1.00 } ; // the eye
-Vector3 light = { 0.00 , 1.25 , -0.50 } ; // the light
-//
+Vector3 eye = { .x = 0.50, .y = 0.50, .z = -1.00 };
+Vector3 light = { .x = 0.00, .y = 1.25, .z = -0.50 }; 
 
 double dot_vec( Vector3 t , Vector3 u )
 {
@@ -71,7 +70,7 @@ void init_objects()
        .y = -20000.00,
        .z = 0.50 
    };
-   spheres[0].r   =  20000.25 ;
+   spheres[0].r = 20000.25;
    spheres[0].h = (Color) { 
        .r = 205,
        .g = 133,
@@ -84,7 +83,7 @@ void init_objects()
        .y = 0.50,
        .z = 0.50
    };
-   spheres[1].r   =      0.25 ;
+   spheres[1].r  = 0.25;
    spheres[1].h = (Color) {
        .r = 0,
        .g = 0,
@@ -97,7 +96,7 @@ void init_objects()
        .y = 0.50,
        .z = 1.00 
    };
-   spheres[2].r   =      0.25 ;
+   spheres[2].r = 0.25;
    spheres[2].h = (Color) {
        .r = 0,
        .g = 255,
@@ -110,9 +109,8 @@ void init_objects()
        .y = 0.75,
        .z = 1.25 
    };
-   spheres[3].r   =      0.50 ;
-   spheres[3].h = (Color) 
-   { 
+   spheres[3].r = 0.50;
+   spheres[3].h = (Color) { 
        .r = 255,
        .g = 0,
        .b = 0 
@@ -230,6 +228,7 @@ int main(void)
 
     double aspect_ratio = (MAX_X * 1.0) / MAX_Y;
 
+    #pragma omp parallel for
     for (size_t y = 0; y < MAX_Y; y++)
     {
         for (size_t x = 0; x < MAX_X; x++)
@@ -241,7 +240,7 @@ int main(void)
 
             Vector3 ray_dir = create_ray(eye, (Vector3) { .x = px_scaled, .y = py_scaled });
 
-            Color c = (Color) { .r = 255, .g = 255, .b = 255 };
+            Color c = { .r = 255, .g = 255, .b = 255 };
 
             double min_t = INFINITY;
             double t = 0;
