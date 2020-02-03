@@ -9,6 +9,7 @@
 
 #define MAX_X 640
 #define MAX_Y 480
+#define EPSILON 0.001
 
 typedef struct
 {
@@ -35,6 +36,7 @@ typedef struct
 
     // Color
     Color h;
+
 } Sphere;
 
 #define SPHERE_NUM 4
@@ -126,7 +128,7 @@ inline Vector3 add_vec(Vector3 a, Vector3 b)
     };
 }
 
-inline Vector3 mul_vec(double scalar, Vector3 v)
+inline Vector3 mul_vec(Vector3 v, double scalar)
 {
     return (Vector3) {
         .x = v.x * scalar,
@@ -137,7 +139,7 @@ inline Vector3 mul_vec(double scalar, Vector3 v)
 
 inline Vector3 sub_vec(Vector3 a, Vector3 b)
 {
-    return add_vec(a, mul_vec(-1, b));
+    return add_vec(a, mul_vec(b, -1));
 }
 
 inline double sq(double d)
@@ -154,13 +156,13 @@ void normalize(Vector3* ray_dir)
     ray_dir -> z /= magnitude;
 }
 
-Vector3 create_ray(Vector3 origin, double x_scaled, double y_scaled)
+Vector3 create_ray(Vector3 origin, Vector3 end)
 {
     Vector3 ray_dir = (Vector3)
     {
-        .x = x_scaled - origin.x,
-        .y = y_scaled - origin.y,
-        .z = - origin.z
+        .x = end.x - origin.x,
+        .y = end.y - origin.y,
+        .z = end.z - origin.z
     };
 
     normalize(&ray_dir);
@@ -168,7 +170,7 @@ Vector3 create_ray(Vector3 origin, double x_scaled, double y_scaled)
     return ray_dir;
 }
 
-bool cast (Vector3 origin, Vector3 ray_dir, Sphere s, double* t)
+bool cast(Vector3 origin, Vector3 ray_dir, Sphere s, double* t)
 {
     Vector3 ray_diff = sub_vec(origin, s.c);
 
@@ -195,58 +197,8 @@ bool cast (Vector3 origin, Vector3 ray_dir, Sphere s, double* t)
     return *t > 0;
 }
 
-int main(int argc, char** argv)
+void write_file(Color** grid)
 {
-    Color** grid = malloc(sizeof(Color*) * MAX_Y);
-
-    for (int i = 0; i < MAX_Y; i++)
-        grid[i] = malloc(sizeof(Color) * MAX_X);
-
-    // TODO make this not global
-    init_objects();
-
-    double aspect_ratio = (MAX_X * 1.0) / MAX_Y;
-
-    for (size_t y = 0; y < MAX_Y; y++)
-    {
-        for (size_t x = 0; x < MAX_X; x++)
-        {
-            double px_scaled = (x + 0.5) / (1.0 * MAX_X);
-            double py_scaled = ((MAX_Y - y) + 0.5) / (1.0 * MAX_Y);
-
-            px_scaled *= aspect_ratio;
-
-            Vector3 ray_dir = create_ray(eye, px_scaled, py_scaled);
-
-            Color c;
-
-            int sphere = -1;
-
-            double min_t = INFINITY;
-            double t = 0;
-
-            // foreach (Sphere a[i] in a)
-            for (int i = 0; i < SPHERE_NUM; i++)
-            {
-                if (cast(eye, ray_dir, spheres[i], &t))
-                {
-                   if (t < min_t)
-                   {
-                       min_t = t;
-                       sphere = i;
-                   }
-                }
-            }
-
-            c = sphere != -1
-                ? spheres[sphere].h
-                : (Color) { .r = 255, .g = 255, .b = 255 }
-            ;
-
-            grid[y][x] = c;
-        }
-    }
-
     FILE *fout = fopen("out.ppm", "w");
 
     fprintf(fout, "P3\n");
@@ -264,6 +216,84 @@ int main(int argc, char** argv)
     }
 
     fclose(fout);
+}
+
+int main(void)
+{
+    Color** grid = malloc(sizeof(Color*) * MAX_Y);
+
+    for (size_t i = 0; i < MAX_Y; i++)
+       grid[i] = malloc(sizeof(Color) * MAX_X);
+
+    // TODO make this not global
+    init_objects();
+
+    double aspect_ratio = (MAX_X * 1.0) / MAX_Y;
+
+    for (size_t y = 0; y < MAX_Y; y++)
+    {
+        for (size_t x = 0; x < MAX_X; x++)
+        {
+            double px_scaled = (x + 0.5) / (1.0 * MAX_X);
+            double py_scaled = ((MAX_Y - y) + 0.5) / (1.0 * MAX_Y);
+
+            px_scaled *= aspect_ratio;
+
+            Vector3 ray_dir = create_ray(eye, (Vector3) { .x = px_scaled, .y = py_scaled });
+
+            Color c = (Color) { .r = 255, .g = 255, .b = 255 };
+
+            double min_t = INFINITY;
+            double t = 0;
+
+            // foreach (Sphere a[i] in a)
+            for (size_t i = 0; i < SPHERE_NUM; i++)
+            {
+                if (cast(eye, ray_dir, spheres[i], &t))
+                {
+                   if (t >= min_t) continue;
+
+                   min_t = t;
+
+                   c = spheres[i].h;
+                }
+            }
+
+            // If we haven't hit something, end
+            if (min_t == INFINITY)
+            {
+                grid[y][x] = c;
+                continue;
+            }
+
+            // Calculate the intersection point with i = origin + t * dir
+            // t is subtracted by a bit so we aren't inside the sphere
+            Vector3 intersection = add_vec(eye, mul_vec(ray_dir, min_t - EPSILON));
+
+            ray_dir = create_ray(intersection, light);
+
+            // And then check if intersection -> light hits anything
+            for (size_t i = 0; i < SPHERE_NUM; i++)
+            {
+                if (!cast(intersection, ray_dir, spheres[i], &t)) continue;
+
+                c.r /= 2;
+                c.g /= 2;
+                c.b /= 2;
+
+                break;
+            }
+
+            grid[y][x] = c;
+        }
+    }
+
+    write_file(grid);
+
+    for (size_t i = 0; i < MAX_Y; i++)
+        free(grid[i]);
+
+    free(grid);
 
     return 0;
 }
