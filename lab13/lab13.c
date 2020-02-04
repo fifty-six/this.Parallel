@@ -10,7 +10,8 @@
 #define MAX_X 1920
 #define MAX_Y 1080
 #define EPSILON 0.001
-#define SHADOW .5
+#define SHADOW .8
+#define WIDTH 0.1
 
 typedef struct
 {
@@ -246,7 +247,7 @@ int main(void)
             double min_t = INFINITY;
             double t = 0;
 
-            int sphere = 0;
+            int sphere_ind = 0;
 
             // foreach (Sphere a[i] in a)
             for (size_t i = 0; i < SPHERE_NUM; i++)
@@ -257,7 +258,7 @@ int main(void)
 
                    min_t = t;
 
-                   sphere = i;
+                   sphere_ind = i;
 
                    c = spheres[i].h;
                 }
@@ -270,9 +271,17 @@ int main(void)
                 continue;
             }
 
+            Sphere sphere = spheres[sphere_ind];
+
             // Calculate the intersection point with i = origin + t * dir
             // t is subtracted by a bit so we aren't inside the sphere
             Vector3 intersection = add_vec(eye, mul_vec(ray_dir, min_t - EPSILON));
+
+            if (sphere_ind == 0)
+            {
+                if ( ((int) (round(intersection.x / WIDTH) + round(intersection.z / WIDTH))) % 2 == 0)
+                    c = (Color) { .r = 255, .g = 255, .b = 255 };
+            }
 
             Vector3 light_dir = create_ray(intersection, light);
 
@@ -289,7 +298,7 @@ int main(void)
             }
 
             // Take the intersection dot the surface normal to find the cosine between the two
-            Vector3 gradient = sub_vec(intersection, spheres[sphere].c);
+            Vector3 gradient = sub_vec(intersection, sphere.c);
             normalize(&gradient);
 
             // |grad| = 1, |ray_dir| = 1, 1 * 1 * cos(\theta) = cos(\theta).
