@@ -8,9 +8,9 @@
 #include <stdio.h>
 
 #define MAX_X 1920
-#define MAX_Y 1080
+#define MAX_Y 1620
 #define EPSILON 0.001
-#define SHADOW .8
+#define SHADOW 0.8
 #define WIDTH 0.1
 
 typedef struct
@@ -42,7 +42,7 @@ typedef struct
 
 } Sphere;
 
-#define SPHERE_NUM 4
+#define SPHERE_NUM 5
 
 Sphere spheres[SPHERE_NUM];
 
@@ -116,6 +116,14 @@ void init_objects()
        .r = 255,
        .g = 0,
        .b = 0 
+   };
+
+   spheres[4].c = (Vector3) { .x = 0.00, .y = 1.25, .z = -0.50 }; 
+   spheres[4].r = 0.50;
+   spheres[4].h = (Color) {
+       .r = 255,
+       .g = 255,
+       .b = 255
    };
 }
 
@@ -218,6 +226,24 @@ void write_file(Color** grid)
     fclose(fout);
 }
 
+bool shadow(Vector3 intersection, Vector3 light_dir, Color* c)
+{
+    double t = 0.0;
+
+    for (size_t i = 0; i < SPHERE_NUM - 1; i++)
+    {
+        if (!cast(intersection, light_dir, spheres[i], &t)) continue;
+
+        c -> r *= 1 - SHADOW;
+        c -> g *= 1 - SHADOW;
+        c -> b *= 1 - SHADOW;
+
+        return true;
+    }
+
+    return false;
+}
+
 int main(void)
 {
     Color** grid = malloc(sizeof(Color*) * MAX_Y);
@@ -235,7 +261,7 @@ int main(void)
     {
         for (size_t x = 0; x < MAX_X; x++)
         {
-            double px_scaled = (x + 0.5) / (1.0 * MAX_X);
+            double px_scaled = -.25 + (x + 0.5) / (1.0 * MAX_X);
             double py_scaled = ((MAX_Y - y) + 0.5) / (1.0 * MAX_Y);
 
             px_scaled *= aspect_ratio;
@@ -265,7 +291,7 @@ int main(void)
             }
 
             // If we haven't hit something, end
-            if (min_t == INFINITY)
+            if (min_t == INFINITY || sphere_ind == SPHERE_NUM - 1)
             {
                 grid[y][x] = c;
                 continue;
@@ -286,26 +312,24 @@ int main(void)
             Vector3 light_dir = create_ray(intersection, light);
 
             // And then check if intersection -> light hits anything
-            for (size_t i = 0; i < SPHERE_NUM; i++)
+            if (shadow(intersection, light_dir, &c))
             {
-                if (!cast(intersection, light_dir, spheres[i], &t)) continue;
+                grid[y][x] = c;
 
-                c.r *= SHADOW;
-                c.g *= SHADOW;
-                c.b *= SHADOW;
-
-                break;
+                continue;
             }
 
             // Take the intersection dot the surface normal to find the cosine between the two
             Vector3 gradient = sub_vec(intersection, sphere.c);
+
             normalize(&gradient);
 
             // |grad| = 1, |ray_dir| = 1, 1 * 1 * cos(\theta) = cos(\theta).
             double cos_theta = dot_vec(gradient, light_dir);
 
-            cos_theta = cos_theta < 0 ? cos_theta * -1 : cos_theta;
-            
+            if (cos_theta < 0)
+                cos_theta = 0;
+
             c.r *= (1 - SHADOW) + SHADOW * cos_theta;
             c.g *= (1 - SHADOW) + SHADOW * cos_theta;
             c.b *= (1 - SHADOW) + SHADOW * cos_theta;
