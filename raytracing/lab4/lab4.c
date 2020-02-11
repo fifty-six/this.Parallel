@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 #define MAX_X 1920
-#define MAX_Y 1620
+#define MAX_Y 1080
 #define EPSILON 0.001
 #define SHADOW 0.8
 #define WIDTH 0.1
@@ -296,7 +296,7 @@ Color get_color(Vector3 origin, Vector3 ray_dir, int depth, int max_depth)
     normalize(&gradient);
 
     // And then check if intersection -> light hits anything
-    if (depth != 0 || !shadow(intersection, light_dir, &c))
+    if (!shadow(intersection, light_dir, &c))
     {
         // |grad| = 1, |ray_dir| = 1, 1 * 1 * cos(\theta) = cos(\theta).
         double cos_theta = dot_vec(gradient, light_dir);
@@ -349,7 +349,7 @@ int main(void)
 
             Vector3 ray_dir = create_ray(eye, (Vector3) { .x = px_scaled, .y = py_scaled });
 
-            grid[y][x] = get_color(eye, ray_dir, 0, 64);
+            grid[y][x] = get_color(eye, ray_dir, 0, 6);
         }
     }
 
