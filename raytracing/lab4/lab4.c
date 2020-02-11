@@ -12,6 +12,7 @@
 #define EPSILON 0.001
 #define SHADOW 0.8
 #define WIDTH 0.1
+#define REFLECT .55
 
 typedef struct
 {
@@ -314,13 +315,13 @@ Color get_color(Vector3 origin, Vector3 ray_dir, int depth, int max_depth)
 
     Color reflect = get_color(intersection, new_ray, depth + 1, max_depth);
 
-    c.r *= .5;
-    c.g *= .5;
-    c.b *= .5;
+    c.r *= 1 - REFLECT;
+    c.g *= 1 - REFLECT;
+    c.b *= 1 - REFLECT;
 
-    c.r += .5 * reflect.r;
-    c.g += .5 * reflect.g;
-    c.b += .5 * reflect.b;
+    c.r += REFLECT * reflect.r;
+    c.g += REFLECT * reflect.g;
+    c.b += REFLECT * reflect.b;
 
     return c;
 }
