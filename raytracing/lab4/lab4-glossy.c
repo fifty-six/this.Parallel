@@ -12,8 +12,7 @@
 #define EPSILON 0.001
 #define SHADOW 0.8
 #define WIDTH 0.1
-#define REFLECT .7
-#define MAX_DEPTH 250
+#define REFLECT .55
 
 typedef struct
 {
@@ -249,8 +248,6 @@ bool shadow(Vector3 intersection, Vector3 light_dir, Color* c)
 
 Color get_color(Vector3 origin, Vector3 ray_dir, int depth, int max_depth)
 {
-    if (depth >= max_depth)
-        return (Color) { .r = -1, .g = -1, .b = -1 };
 
     Color c = { .r = 0, .g = 0, .b = 0 };
 
@@ -299,22 +296,6 @@ Color get_color(Vector3 origin, Vector3 ray_dir, int depth, int max_depth)
 
     normalize(&gradient);
 
-    // basic reflections gang
-    Vector3 new_ray = sub_vec(ray_dir, mul_vec(gradient, 2 * dot_vec(gradient, ray_dir)));
-
-    Color reflect = get_color(intersection, new_ray, depth + 1, max_depth);
-
-    if (reflect.r != -1)
-    {
-        c.r *= 1 - REFLECT;
-        c.g *= 1 - REFLECT;
-        c.b *= 1 - REFLECT;
-
-        c.r += REFLECT * reflect.r;
-        c.g += REFLECT * reflect.g;
-        c.b += REFLECT * reflect.b;
-    }
-
     // And then check if intersection -> light hits anything
     if (!shadow(intersection, light_dir, &c))
     {
@@ -328,6 +309,19 @@ Color get_color(Vector3 origin, Vector3 ray_dir, int depth, int max_depth)
         c.g *= (1 - SHADOW) + SHADOW * cos_theta;
         c.b *= (1 - SHADOW) + SHADOW * cos_theta;
     }
+
+    // basic reflections gang
+    Vector3 new_ray = sub_vec(ray_dir, mul_vec(gradient, 2 * dot_vec(gradient, ray_dir)));
+
+    Color reflect = get_color(intersection, new_ray, depth + 1, max_depth);
+
+    c.r *= 1 - REFLECT;
+    c.g *= 1 - REFLECT;
+    c.b *= 1 - REFLECT;
+
+    c.r += REFLECT * reflect.r;
+    c.g += REFLECT * reflect.g;
+    c.b += REFLECT * reflect.b;
 
     return c;
 }
@@ -356,7 +350,7 @@ int main(void)
 
             Vector3 ray_dir = create_ray(eye, (Vector3) { .x = px_scaled, .y = py_scaled });
 
-            grid[y][x] = get_color(eye, ray_dir, 0, MAX_DEPTH);
+            grid[y][x] = get_color(eye, ray_dir, 0, 6);
         }
     }
 
