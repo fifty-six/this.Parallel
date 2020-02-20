@@ -8,12 +8,10 @@
 #include <stdio.h>
 
 #define MAX_X 1920
-#define MAX_Y 1080
+#define MAX_Y 1620
 #define EPSILON 0.001
 #define SHADOW 0.8
 #define WIDTH 0.1
-#define REFLECT .6
-#define MAX_DEPTH 250
 
 typedef struct
 {
@@ -120,9 +118,8 @@ void init_objects()
        .b = 0 
    };
 
-   // Light
    spheres[4].c = (Vector3) { .x = 0.00, .y = 1.25, .z = -0.50 }; 
-   spheres[4].r = 0.2;
+   spheres[4].r = 0.50;
    spheres[4].h = (Color) {
        .r = 255,
        .g = 255,
@@ -247,91 +244,6 @@ bool shadow(Vector3 intersection, Vector3 light_dir, Color* c)
     return false;
 }
 
-Color get_color(Vector3 origin, Vector3 ray_dir, int depth, int max_depth)
-{
-    if (depth >= max_depth)
-        return (Color) { .r = -1, .g = -1, .b = -1 };
-
-    Color c = { .r = 0, .g = 0, .b = 0 };
-
-    double min_t = INFINITY;
-    double t = 0;
-
-    int sphere_ind = 0;
-
-    // foreach (Sphere a[i] in a)
-    for (size_t i = 0; i < SPHERE_NUM; i++)
-    {
-        if (cast(origin, ray_dir, spheres[i], &t))
-        {
-            if (t >= min_t) continue;
-
-            min_t = t;
-
-            sphere_ind = i;
-
-            c = spheres[i].h;
-        }
-    }
-
-    // If we haven't hit something, end
-    if (min_t == INFINITY || sphere_ind == SPHERE_NUM - 1)
-    {
-        return c;
-    }
-
-    Sphere sphere = spheres[sphere_ind];
-
-    // Calculate the intersection point with i = origin + t * dir
-    // t is subtracted by a bit so we aren't inside the sphere
-    Vector3 intersection = add_vec(origin, mul_vec(ray_dir, min_t - EPSILON));
-
-    if (sphere_ind == 0)
-    {
-        if ( ((int) (round(intersection.x / WIDTH) + round(intersection.z / WIDTH))) % 2 == 0)
-            c = (Color) { .r = 255, .g = 255, .b = 255 };
-    }
-
-    Vector3 light_dir = create_ray(intersection, light);
-
-    // Surface normal
-    Vector3 gradient = sub_vec(intersection, sphere.c);
-
-    normalize(&gradient);
-
-    // basic reflections gang
-    Vector3 new_ray = sub_vec(ray_dir, mul_vec(gradient, 2 * dot_vec(gradient, ray_dir)));
-
-    Color reflect = get_color(intersection, new_ray, depth + 1, max_depth);
-
-    if (reflect.r != -1)
-    {
-        c.r *= 1 - REFLECT;
-        c.g *= 1 - REFLECT;
-        c.b *= 1 - REFLECT;
-
-        c.r += REFLECT * reflect.r;
-        c.g += REFLECT * reflect.g;
-        c.b += REFLECT * reflect.b;
-    }
-
-    // And then check if intersection -> light hits anything
-    if (!shadow(intersection, light_dir, &c))
-    {
-        // |grad| = 1, |ray_dir| = 1, 1 * 1 * cos(\theta) = cos(\theta).
-        double cos_theta = dot_vec(gradient, light_dir);
-
-        if (cos_theta < 0)
-            cos_theta = 0;
-
-        c.r *= (1 - SHADOW) + SHADOW * cos_theta;
-        c.g *= (1 - SHADOW) + SHADOW * cos_theta;
-        c.b *= (1 - SHADOW) + SHADOW * cos_theta;
-    }
-
-    return c;
-}
-
 int main(void)
 {
     Color** grid = malloc(sizeof(Color*) * MAX_Y);
@@ -356,7 +268,73 @@ int main(void)
 
             Vector3 ray_dir = create_ray(eye, (Vector3) { .x = px_scaled, .y = py_scaled });
 
-            grid[y][x] = get_color(eye, ray_dir, 0, MAX_DEPTH);
+            Color c = { .r = 0, .g = 0, .b = 0 };
+
+            double min_t = INFINITY;
+            double t = 0;
+
+            int sphere_ind = 0;
+
+            // foreach (Sphere a[i] in a)
+            for (size_t i = 0; i < SPHERE_NUM; i++)
+            {
+                if (cast(eye, ray_dir, spheres[i], &t))
+                {
+                   if (t >= min_t) continue;
+
+                   min_t = t;
+
+                   sphere_ind = i;
+
+                   c = spheres[i].h;
+                }
+            }
+
+            // If we haven't hit something, end
+            if (min_t == INFINITY || sphere_ind == SPHERE_NUM - 1)
+            {
+                grid[y][x] = c;
+                continue;
+            }
+
+            Sphere sphere = spheres[sphere_ind];
+
+            // Calculate the intersection point with i = origin + t * dir
+            // t is subtracted by a bit so we aren't inside the sphere
+            Vector3 intersection = add_vec(eye, mul_vec(ray_dir, min_t - EPSILON));
+
+            if (sphere_ind == 0)
+            {
+                if ( ((int) (round(intersection.x / WIDTH) + round(intersection.z / WIDTH))) % 2 == 0)
+                    c = (Color) { .r = 255, .g = 255, .b = 255 };
+            }
+
+            Vector3 light_dir = create_ray(intersection, light);
+
+            // And then check if intersection -> light hits anything
+            if (shadow(intersection, light_dir, &c))
+            {
+                grid[y][x] = c;
+
+                continue;
+            }
+
+            // Take the intersection dot the surface normal to find the cosine between the two
+            Vector3 gradient = sub_vec(intersection, sphere.c);
+
+            normalize(&gradient);
+
+            // |grad| = 1, |ray_dir| = 1, 1 * 1 * cos(\theta) = cos(\theta).
+            double cos_theta = dot_vec(gradient, light_dir);
+
+            if (cos_theta < 0)
+                cos_theta = 0;
+
+            c.r *= (1 - SHADOW) + SHADOW * cos_theta;
+            c.g *= (1 - SHADOW) + SHADOW * cos_theta;
+            c.b *= (1 - SHADOW) + SHADOW * cos_theta;
+
+            grid[y][x] = c;
         }
     }
 

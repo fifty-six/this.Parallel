@@ -11,9 +11,8 @@
 #define MAX_Y 1080
 #define EPSILON 0.001
 #define SHADOW 0.8
+#define REFLECT 0.6
 #define WIDTH 0.1
-#define REFLECT .6
-#define MAX_DEPTH 250
 
 typedef struct
 {
@@ -130,6 +129,58 @@ void init_objects()
    };
 }
 
+int mercator_w, mercator_h;
+Color** mercator;
+
+void write_file(Color** grid, char* fname, size_t max_y, size_t max_x);
+
+void init_globe()
+{
+    FILE* f = fopen("mercator82.ppm", "r");
+
+    if (!f)
+    {
+        fprintf(stderr, "Meracator82 doesn't exist!");
+
+        exit(-1);
+
+        return;
+    }
+
+    fscanf(f, "P3\n");
+    fscanf(f, "%d %d\n", &mercator_w, &mercator_h);
+
+    mercator = malloc((mercator_h + 1)* sizeof(Color*));
+
+    for (int i = 0; i < mercator_h; i++)
+    {
+        mercator[i] = malloc((mercator_w + 1) * sizeof(Color));
+    }
+
+    // We know the file is 255 color
+    fscanf(f, "255\n");
+
+    int r, g, b;
+
+    for (int i = 0; i < mercator_h; i++)
+    {
+        for (int j = 0; j < mercator_w; j++)
+        {
+            fscanf(f, "%d %d %d\n", &r, &g, &b);
+
+            mercator[i][j] = (Color) {
+                .r = r,
+                .g = g,
+                .b = b
+            };
+        }
+    }
+
+    printf("mercator_h: %d, mercator_w: %d\n", mercator_h, mercator_w);
+
+    write_file(mercator, "clone.ppm", mercator_h, mercator_w);
+}
+
 inline Vector3 add_vec(Vector3 a, Vector3 b)
 {
     return (Vector3) {
@@ -208,17 +259,17 @@ bool cast(Vector3 origin, Vector3 ray_dir, Sphere s, double* t)
     return *t > 0;
 }
 
-void write_file(Color** grid)
+void write_file(Color** grid, char* fname, size_t max_y, size_t max_x)
 {
-    FILE *fout = fopen("out.ppm", "w");
+    FILE *fout = fopen(fname, "w");
 
     fprintf(fout, "P3\n");
-    fprintf(fout, "%d %d\n", MAX_X, MAX_Y);
+    fprintf(fout, "%d %d\n", max_x, max_y);
     fprintf(fout, "255\n");
 
-    for (size_t y = 0; y < MAX_Y; y++ )
+    for (size_t y = 0; y < max_y; y++ )
     {
-        for (size_t x = 0; x < MAX_X; x++)
+        for (size_t x = 0; x < max_x; x++)
         {
             Color c = grid[y][x];
 
@@ -249,8 +300,6 @@ bool shadow(Vector3 intersection, Vector3 light_dir, Color* c)
 
 Color get_color(Vector3 origin, Vector3 ray_dir, int depth, int max_depth)
 {
-    if (depth >= max_depth)
-        return (Color) { .r = -1, .g = -1, .b = -1 };
 
     Color c = { .r = 0, .g = 0, .b = 0 };
 
@@ -299,21 +348,30 @@ Color get_color(Vector3 origin, Vector3 ray_dir, int depth, int max_depth)
 
     normalize(&gradient);
 
-    // basic reflections gang
+    // Blue sphere becomes the earth
+    if (sphere_ind == 1)
+    {
+        double lat_ang = acos(gradient.y);
+        // -pi to pi -> 0 to 2pi
+        double long_ang = atan2(gradient.z, gradient.x) + M_PI;
+
+        int latitude  = (int) (lat_ang * mercator_h / M_PI);
+        int longitude = (int) (long_ang * mercator_w / (2.0 * M_PI));
+
+        c = mercator[latitude][longitude % mercator_w];
+    }
+
     Vector3 new_ray = sub_vec(ray_dir, mul_vec(gradient, 2 * dot_vec(gradient, ray_dir)));
 
     Color reflect = get_color(intersection, new_ray, depth + 1, max_depth);
 
-    if (reflect.r != -1)
-    {
-        c.r *= 1 - REFLECT;
-        c.g *= 1 - REFLECT;
-        c.b *= 1 - REFLECT;
+    c.r *= 1 - REFLECT;
+    c.g *= 1 - REFLECT;
+    c.b *= 1 - REFLECT;
 
-        c.r += REFLECT * reflect.r;
-        c.g += REFLECT * reflect.g;
-        c.b += REFLECT * reflect.b;
-    }
+    c.r += REFLECT * reflect.r;
+    c.g += REFLECT * reflect.g;
+    c.b += REFLECT * reflect.b;
 
     // And then check if intersection -> light hits anything
     if (!shadow(intersection, light_dir, &c))
@@ -341,6 +399,7 @@ int main(void)
 
     // TODO make this not global
     init_objects();
+    init_globe();
 
     double aspect_ratio = (MAX_X * 1.0) / MAX_Y;
 
@@ -356,11 +415,11 @@ int main(void)
 
             Vector3 ray_dir = create_ray(eye, (Vector3) { .x = px_scaled, .y = py_scaled });
 
-            grid[y][x] = get_color(eye, ray_dir, 0, MAX_DEPTH);
+            grid[y][x] = get_color(eye, ray_dir, 0, 6);
         }
     }
 
-    write_file(grid);
+    write_file(grid, "out.ppm", MAX_Y, MAX_X);
 
     for (size_t i = 0; i < MAX_Y; i++)
         free(grid[i]);

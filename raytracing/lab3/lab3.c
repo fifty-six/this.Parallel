@@ -303,12 +303,6 @@ int main(void)
             // t is subtracted by a bit so we aren't inside the sphere
             Vector3 intersection = add_vec(eye, mul_vec(ray_dir, min_t - EPSILON));
 
-            if (sphere_ind == 0)
-            {
-                if ( ((int) (round(intersection.x / WIDTH) + round(intersection.z / WIDTH))) % 2 == 0)
-                    c = (Color) { .r = 255, .g = 255, .b = 255 };
-            }
-
             Vector3 light_dir = create_ray(intersection, light);
 
             // And then check if intersection -> light hits anything
