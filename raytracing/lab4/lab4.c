@@ -12,7 +12,7 @@
 #define EPSILON 0.001
 #define SHADOW 0.8
 #define WIDTH 0.1
-#define REFLECT .7
+#define REFLECT .6
 #define MAX_DEPTH 250
 
 typedef struct
