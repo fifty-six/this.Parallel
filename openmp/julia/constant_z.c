@@ -8,7 +8,7 @@
 #define MAX_X 1440
 #define MAX_Y 1080
 
-#define ITER 300
+#define ITER 1000
 
 #define R_MAX +2.0
 #define R_MIN -2.0

@@ -8,7 +8,7 @@
 #define MAX_X 1440
 #define MAX_Y 1080
 
-#define ITER 3000
+#define ITER 30000
 
 #define R_MAX +2.0
 #define R_MIN -2.0
@@ -174,8 +174,8 @@ int main(void)
 
        // e^ix = rcis(theta) = r * ( cos(theta) + i sin(theta) )
 
-       double re_z0 = cos(theta);
-       double im_z0 = sin(theta);
+       double re_z0 = 0.785 * cos(theta);
+       double im_z0 = 0.785 * sin(theta);
 
        printf("Starting frame %03d (x = %f, y = %f).\n", (int) frame, re_z0, im_z0);
 
