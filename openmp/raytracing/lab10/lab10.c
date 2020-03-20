@@ -58,6 +58,17 @@ typedef struct
 
 } Triangle;
 
+typedef struct
+{
+    // 2 for each face
+    Triangle* bbox;
+
+    Triangle* tris;
+
+    size_t tri_count;
+
+} Object;
+
 #define SPHERE_NUM 5
 
 Sphere spheres[SPHERE_NUM];
@@ -197,8 +208,8 @@ void init_globe()
     }
 }
 
-Triangle* triangles;
-size_t tri_count;
+Object* objects;
+size_t obj_count = 1;
 
 void init_triangles()
 {
@@ -235,6 +246,8 @@ void init_triangles()
         exit(-1);
     }
 
+    size_t tri_count;
+
     // Number of faces == Number of triangles
     fscanf(f_faces, "%lu\n", &tri_count);
 
@@ -260,8 +273,6 @@ void init_triangles()
 
     fscanf(f_normals, "%lu\n", &normal_count);
 
-    assert(normal_count == tri_count);
-
     for (size_t i = 0; i < tri_count; i++)
     {
         double x, y, z;
@@ -271,18 +282,40 @@ void init_triangles()
         normals[i] = (Vector3) { .x = x, .y = y, .z = z };
     }
 
-    triangles = malloc(sizeof(Triangle) * tri_count);
-
-    for (size_t i = 0; i < tri_count; i++)
+    Object obj = (Object)
     {
-        triangles[i] = (Triangle) {
+        .bbox = malloc(sizeof(Triangle) * 12),
+
+        .tris = malloc(sizeof(Triangle) * (tri_count - 12)),
+
+        .tri_count = tri_count - 12
+    };
+
+    for (size_t i = 0; i < 12; i++)
+    {
+        obj.bbox[i] = (Triangle) {
             .h      = (Color) { .r = 0, .g = 0, .b = 255 },
             .normal = normals[i]
         };
 
         for (size_t j = 0; j < 3; j++)
-            triangles[i].vertices[j] = verts[faces[3 * i + j]];
+            obj.bbox[i].vertices[j] = verts[faces[3 * i + j]];
     }
+
+    for (size_t i = 12; i < tri_count; i++)
+    {
+        obj.tris[i - 12] = (Triangle) {
+            .h      = (Color) { .r = 0, .g = 0, .b = 255 },
+            .normal = normals[i]
+        };
+
+        for (size_t j = 0; j < 3; j++)
+            obj.tris[i - 12].vertices[j] = verts[faces[3 * i + j]];
+    }
+
+    objects = malloc(sizeof(Object) * 1);
+
+    objects[0] = obj;
 }
 
 static inline Vector3 add_vec(Vector3 a, Vector3 b)
@@ -386,19 +419,13 @@ bool tri_cast(Vector3 origin, Vector3 ray_dir, Triangle tri, double* t, double m
 
     double alpha = (wu*vv - uv*wv)/denom;
 
-    // fprintf(stderr, "Alpha: %f\n", alpha);
-
-    if (alpha < 0)//  || alpha > 1)
+    if (alpha < 0 || alpha > 1)
         return false;
 
     double beta  = (wv*uu - uv*wu)/denom;
 
-//    fprintf(stderr, "Beta: %f\n", beta);
-
-    if (beta < 0)// || beta > 1)
+    if (beta < 0 || beta > 1)
         return false;
-
- //   fprintf(stderr, "alpha+beta: %f\n", alpha+beta);
 
     return alpha + beta <= 1;
 }
@@ -439,15 +466,32 @@ bool shadow(Vector3 intersection, Vector3 light_dir, Color* c)
         return true;
     }
 
-    for (size_t i = 0; i < tri_count; i++)
+    for (size_t i = 0; i < obj_count; i++)
     {
-        if (!tri_cast(intersection, light_dir, triangles[i], &t, 0)) continue;
+        bool hit_obj = false;
 
-        c -> r *= 1 - SHADOW;
-        c -> g *= 1 - SHADOW;
-        c -> b *= 1 - SHADOW;
+        for (size_t j = 0; j < 12; j++)
+        {
+            if (tri_cast(intersection, light_dir, objects[i].bbox[j], &t, INFINITY))
+            {
+                hit_obj = true;
+                break;
+            }
+        }
 
-        return true;
+        if (!hit_obj)
+            continue;
+
+        for (size_t j = 0; j < objects[i].tri_count; j++)
+        {
+            if (!tri_cast(intersection, light_dir, objects[i].tris[j], &t, INFINITY)) continue;
+
+            c -> r *= 1 - SHADOW;
+            c -> g *= 1 - SHADOW;
+            c -> b *= 1 - SHADOW;
+
+            return true;
+        }
     }
 
     return false;
@@ -481,8 +525,9 @@ Color get_color(Vector3 origin, Vector3 ray_dir, int depth, int max_depth)
     double min_t = INFINITY;
     double t = 0;
 
-    int sphere_ind = 0;
-    int triangle_ind = 0;
+    size_t sphere_ind = 0;
+    size_t obj_ind = 0;
+    size_t triangle_ind = 0;
 
     for (size_t i = 0; i < SPHERE_NUM; i++)
     {
@@ -498,16 +543,34 @@ Color get_color(Vector3 origin, Vector3 ray_dir, int depth, int max_depth)
         }
     }
 
-    for (size_t i = 0; i < tri_count; i++)
+    for (size_t i = 0; i < obj_count; i++)
     {
-        if (tri_cast(origin, ray_dir, triangles[i], &t, min_t))
+        bool hit_obj = false;
+
+        for (size_t j = 0; j < 12; j++)
         {
+            if (tri_cast(origin, ray_dir, objects[i].bbox[j], &t, min_t))
+            {
+                hit_obj = true;
+                break;
+            }
+        }
+
+        if (!hit_obj)
+            continue;
+
+        for (size_t j = 0; j < objects[i].tri_count; j++)
+        {
+            if (!tri_cast(origin, ray_dir, objects[i].tris[j], &t, min_t)) continue;
+
             min_t = t;
 
-            triangle_ind = i;
-            sphere_ind = -1;
+            obj_ind = i;
+            triangle_ind = j;
 
-            c = triangles[i].h;
+            sphere_ind = (size_t) -1;
+
+            c = objects[i].tris[j].h;
         }
     }
 
@@ -530,9 +593,9 @@ Color get_color(Vector3 origin, Vector3 ray_dir, int depth, int max_depth)
     Vector3 light_dir = create_ray(intersection, light);
 
     // Surface normal
-    Vector3 gradient = sphere_ind != -1 
+    Vector3 gradient = sphere_ind != (size_t) -1 
         ? sub_vec(intersection, spheres[sphere_ind].c) 
-        : triangles[triangle_ind].normal;
+        : objects[obj_ind].tris[triangle_ind].normal;
 
     normalize(&gradient);
 
