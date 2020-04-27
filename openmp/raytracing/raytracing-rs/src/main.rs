@@ -20,13 +20,13 @@ fn write_file(grid: Vec<Vec<Color>>, f_name: &str) -> Result<(), Error> {
 
     let mut writer = BufWriter::new(file);
 
-    writer.write("P3\n".as_bytes())?;
-    writer.write(format!("{} {}\n", grid.first().unwrap().len(), grid.len()).as_bytes())?;
-    writer.write("255\n".as_bytes())?;
+    writer.write_all(b"P3\n")?;
+    writer.write_all(format!("{} {}\n", grid.first().unwrap().len(), grid.len()).as_bytes())?;
+    writer.write_all(b"255\n")?;
 
     for y_row in grid {
         for px in y_row {
-            writer.write(format!("{} {} {}\n", px.r, px.g, px.b).as_bytes())?;
+            writer.write_all(format!("{} {} {}\n", px.r, px.g, px.b).as_bytes())?;
         }
     }
 
@@ -138,7 +138,7 @@ pub fn get_color(
             depth + 1,
             max_depth,
         )
-        .unwrap_or(Color::black());
+        .unwrap_or_else(Color::black);
 
         c *= 1. - REFLECT;
 
@@ -194,6 +194,4 @@ fn main() {
     }
 
     write_file(grid, "out.ppm").expect("Unable to write to file out.ppm!");
-
-    println!("Hello, world!");
 }
