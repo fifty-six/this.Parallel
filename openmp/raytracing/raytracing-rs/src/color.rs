@@ -12,8 +12,20 @@ impl Color {
         Color { r, g, b }
     }
 
+    pub fn elementwise(self, rhs: Color) -> Color {
+        Color {
+            r: ((self.r as u32 * rhs.r as u32) / 255) as u8,
+            g: ((self.g as u32 * rhs.g as u32) / 255) as u8,
+            b: ((self.b as u32 * rhs.b as u32) / 255) as u8,
+        }
+    }
+
     pub fn black() -> Color {
         Color::new(0, 0, 0)
+    }
+
+    pub fn white() -> Color {
+        Color::new(255, 255, 255)
     }
 }
 

@@ -4,6 +4,7 @@ use crate::Vec3;
 #[derive(Debug)]
 pub struct Sphere {
     pub radius: f64,
+    pub diffuseness: f64,
     pub center: Vec3,
     pub color: Color,
 }
@@ -44,5 +45,9 @@ impl Sphere {
         min -= EPSILON;
 
         Some((self, origin + dir * min, min))
+    }
+
+    pub fn lambert_factor(&self, lambert: f64) -> f64 {
+        1.0 - ((1.0 - lambert) * self.diffuseness)
     }
 }

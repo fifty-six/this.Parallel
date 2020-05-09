@@ -1,37 +1,17 @@
+mod canvas;
 mod color;
 mod sphere;
 mod vec3;
 
+use canvas::Canvas;
 use color::Color;
 use sphere::Sphere;
 use vec3::Vec3;
 
-use std::fs::File;
-use std::io::{BufWriter, Error, Write};
 use std::path::Path;
 
 const SHADOW: f64 = 0.7;
 const REFLECT: f64 = 0.7;
-
-fn write_file(grid: Vec<Vec<Color>>, f_name: &str) -> Result<(), Error> {
-    let path = Path::new(f_name);
-
-    let file = File::create(path)?;
-
-    let mut writer = BufWriter::new(file);
-
-    writer.write_all(b"P3\n")?;
-    writer.write_all(format!("{} {}\n", grid.first().unwrap().len(), grid.len()).as_bytes())?;
-    writer.write_all(b"255\n")?;
-
-    for y_row in grid {
-        for px in y_row {
-            writer.write_all(format!("{} {} {}\n", px.r, px.g, px.b).as_bytes())?;
-        }
-    }
-
-    Ok(())
-}
 
 fn objects() -> Vec<Sphere> {
     vec![
@@ -48,6 +28,7 @@ fn objects() -> Vec<Sphere> {
                 g: 255,
                 b: 255,
             },
+            diffuseness: 1.0,
         },
         // Floor
         Sphere {
@@ -62,6 +43,7 @@ fn objects() -> Vec<Sphere> {
                 g: 21,
                 b: 81,
             },
+            diffuseness: 1.0,
         },
         // Blue sphere in middle
         Sphere {
@@ -72,6 +54,7 @@ fn objects() -> Vec<Sphere> {
                 z: 0.5,
             },
             color: Color { r: 0, g: 0, b: 255 },
+            diffuseness: 1.0,
         },
         // Green sphere on right
         Sphere {
@@ -82,6 +65,7 @@ fn objects() -> Vec<Sphere> {
                 z: 1.0,
             },
             color: Color { r: 0, g: 255, b: 0 },
+            diffuseness: 1.0,
         },
         // Red sphere on left
         Sphere {
@@ -92,6 +76,7 @@ fn objects() -> Vec<Sphere> {
                 z: 1.25,
             },
             color: Color { r: 255, g: 0, b: 0 },
+            diffuseness: 1.0,
         },
     ]
 }
@@ -104,6 +89,10 @@ pub fn get_color(
     depth: i8,
     max_depth: i8,
 ) -> Option<Color> {
+    if depth == max_depth {
+        return None;
+    }
+
     let hit = spheres
         .iter()
         .filter_map(|x| x.intersect(origin, dir))
@@ -178,20 +167,22 @@ fn main() {
 
     let spheres = objects();
 
-    let mut grid = vec![vec![Color::black(); max_x]; max_y];
+    let mut canvas = Canvas::new(max_x, max_y);
 
-    for (y, col) in grid.iter_mut().enumerate() {
-        for (x, c) in col.iter_mut().enumerate() {
+    for y in 0..canvas.height {
+        for x in 0..canvas.width {
             let px_scaled = -0.25 + (x as f64 + 0.5) / max_y as f64;
             let py_scaled = ((max_y - y) as f64 + 0.5) / max_y as f64;
 
             let ray_dir = eye.ray_to(Vec3::new(px_scaled, py_scaled, 0.));
 
             if let Some(new_c) = get_color(eye, ray_dir, light, &spheres, 0, 10) {
-                *c = new_c;
+                canvas.set(x, y, new_c);
             }
         }
     }
 
-    write_file(grid, "out.ppm").expect("Unable to write to file out.ppm!");
+    canvas
+        .write(Path::new("out.ppm"))
+        .expect("Unable to write to file.");
 }

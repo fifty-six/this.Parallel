@@ -5,3 +5,5 @@ authors = ["5FiftySix6 <ybham6@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+rand = "0.7.3"
+rayon = "1.3.0"
